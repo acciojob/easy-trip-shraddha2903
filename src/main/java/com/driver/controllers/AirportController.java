@@ -6,6 +6,7 @@ import com.driver.model.City;
 import com.driver.model.Flight;
 import com.driver.model.Passenger;
 import com.driver.service.AirportService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -17,7 +18,8 @@ import java.util.Objects;
 
 @RestController
 public class AirportController {
-    private AirportService airportService = new AirportService();
+    @Autowired
+    private AirportService airportService;
     @PostMapping("/add_airport")
     public String addAirport(@RequestBody Airport airport){
         //Simply add airport details to your database
