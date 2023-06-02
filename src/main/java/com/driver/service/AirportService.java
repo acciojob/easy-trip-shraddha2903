@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class AirportService {
@@ -21,14 +22,42 @@ public class AirportService {
     }
 
     public String getLargestAirportName() {
-        return airportRepository.getLargestAirportName();
-        //return null;
+        List<Airport> airports = airportRepository.getAllAirports();
+        int max = Integer.MIN_VALUE;
+        String name=airports.get(0).getAirportName();
+        for(Airport port : airports)
+        {
+            if(port.getNoOfTerminals()>max)
+            {
+                max=port.getNoOfTerminals();
+                name= port.getAirportName();
+            }
+            if(port.getNoOfTerminals()==max)
+            {
+                if(name.compareTo(port.getAirportName())>0)
+                {
+                    name=port.getAirportName();
+                }
+            }
+        }
+        return name;
     }
 
     public double getShortestDurationOfPossibleBetweenTwoCities(City fromCity, City toCity) {
-        double time = airportRepository.getShortestDurationOfPossibleBetweenTwoCities(fromCity,toCity);
-        if(time == Integer.MAX_VALUE)
-            return -1;
+        List<Flight> flights = airportRepository.getAllFlight();
+
+        double time = Double.MAX_VALUE;
+        for(Flight ft : flights)
+        {
+            String from_city = ft.getFromCity().name();
+            String to_city = ft.getToCity().name();
+            if(from_city.equals(fromCity.name()) && to_city.equals(toCity.name()))
+            {
+                time = Math.min(time,ft.getDuration());
+            }
+        }
+        if(time == Double.MAX_VALUE)
+            return Double.valueOf("-1");
         return  time;
     }
 
@@ -71,27 +100,42 @@ public class AirportService {
     }
 
     public int getNumberOfPeopleOn(Date date, String airportName) {
-       List<Flight> flights = flightOnGivenDate(date);
-       int count=0;
-       for(Flight fl: flights)
-       {
-           if(fl.getFromCity().equals(airportName))
-           {
-               count+= airportRepository.getNumberOfPeopleOn(fl.getFlightId());
-           }
-           if(fl.getToCity().equals(airportName))
-           {
-               count+= airportRepository.getNumberOfPeopleOn(fl.getFlightId());
-           }
-       }
-       return count;
+
+        Optional<Airport> airportOpt = airportRepository.getAirportByName(airportName);
+        if(airportOpt.isEmpty())
+            throw new RuntimeException("airport not present");
+        City city = airportOpt.get().getCity();
+        List<Flight>flights = airportRepository.getAllFlight();
+        int count=0;
+        for(Flight fl: flights)
+        {
+            if(fl.getFlightDate().equals(date) && (fl.getFromCity().equals(city)) || fl.getToCity().equals(city))
+            {
+                count+=fl.getMaxCapacity();
+            }
+        }
+        return count;
+//       List<Flight> flights = flightOnGivenDate(date);
+//       int count=0;
+//       for(Flight fl: flights)
+//       {
+//           if(fl.getFromCity().equals(airportName))
+//           {
+//               count+= airportRepository.getNumberOfPeopleOn(fl.getFlightId());
+//           }
+//           if(fl.getToCity().equals(airportName))
+//           {
+//               count+= airportRepository.getNumberOfPeopleOn(fl.getFlightId());
+//           }
+//       }
+//       return count;
     }
     public List<Flight> flightOnGivenDate(Date date)
     {
         List<Flight> flight =airportRepository.getFlightOnDate(date);
         if(!flight.isEmpty())
             return flight;
-        throw new RuntimeException("No flight on perticular Date: "+date);
+        throw new RuntimeException("No flight on particular Date: "+date);
 
     }
 

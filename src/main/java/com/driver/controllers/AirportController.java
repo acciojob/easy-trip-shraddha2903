@@ -111,8 +111,6 @@ public class AirportController {
         airportService.addFlight(flight);
        return "SUCCESS";
     }
-
-
     @GetMapping("/get-aiportName-from-flight-takeoff/{flightId}")
     public String getAirportNameFromFlightId(@PathVariable("flightId")Integer flightId){
 

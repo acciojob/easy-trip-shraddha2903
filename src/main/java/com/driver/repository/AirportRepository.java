@@ -15,46 +15,16 @@ public class AirportRepository {
     private Map<Integer, List<Integer>> passengeFlightPair = new HashMap<>();//passenge->flights
     private Map<Integer,List<Integer>> flightPassengerDetails = new HashMap<>();//Flight->passenger
     public void addAirport(Airport airport) {
-        airportData.put(airport.getCity().name(), airport);
+        airportData.put(airport.getAirportName(), airport);
     }
 
-    public String getLargestAirportName() {
-        int max =Integer.MIN_VALUE;
-        String largest_airport = null;
-        for(Map.Entry<String,Airport> hm : airportData.entrySet())
-        {
-            int temp = hm.getValue().getNoOfTerminals();
-            if(temp > max)
-            {
-                max = hm.getValue().getNoOfTerminals();
-                largest_airport = hm.getValue().getAirportName();
-            }
-            else if(temp == max)
-            {
-                int v = largest_airport.compareTo(hm.getValue().getAirportName());
-                if(v > 0)
-                {
-                    largest_airport = hm.getValue().getAirportName();
-                }
-            }
-        }
-        return largest_airport;
+    public List<Airport> getAllAirports() {
+       return new ArrayList<>(airportData.values());
     }
 
-    public double getShortestDurationOfPossibleBetweenTwoCities(City fromCity, City toCity) {
-
-        double time = Integer.MAX_VALUE;
-        for(Map.Entry<Integer,Flight> hm : flightMap.entrySet())
-        {
-            String from_city = hm.getValue().getFromCity().name();
-            String to_city = hm.getValue().getToCity().name();
-            if(from_city.equals(fromCity.name()) && to_city.equals(toCity.name()))
-            {
-                time = Math.min(time,hm.getValue().getDuration());
-            }
-        }
-        return time;
-
+    public List<Flight> getAllFlight()
+    {
+        return new ArrayList<>(flightMap.values());
     }
 
     public void addPassenger(Passenger passenger) {
@@ -151,5 +121,13 @@ public class AirportRepository {
         if(passengeFlightPair.containsKey(passengerId))
             return passengeFlightPair.get(passengerId).size();
         return 0;
+    }
+
+    public Optional<Airport> getAirportByName(String airportName) {
+        if(airportData.containsKey(airportName))
+        {
+            return Optional.of(airportData.get(airportName));
+        }
+        return Optional.empty();
     }
 }
