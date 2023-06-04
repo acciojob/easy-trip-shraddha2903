@@ -9,9 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class AirportService {
@@ -66,7 +64,22 @@ public class AirportService {
     }
 
     public String getAirportNameFromFlightId(Integer flightId) {
-        return airportRepository.getAirportNameFromFlightId(flightId);
+        //return airportRepository.getAirportNameFromFlightId(flightId);
+        Optional<Flight> flightOpt = airportRepository.getAirportNameFromFlightId(flightId);
+        if(flightOpt.isEmpty())return null;
+
+        Flight flight = flightOpt.get();
+        City city=flight.getFromCity();
+
+        List<Airport> airports = airportRepository.getAllAirports();
+        for(Airport port : airports)
+        {
+            if(port.getCity().equals(city))
+            {
+                return port.getAirportName();
+            }
+        }
+        return null;
     }
 
     public void addFlight(Flight flight) {
@@ -78,14 +91,32 @@ public class AirportService {
     }
 
     public String bookATicket(Integer flightId, Integer passengerId) {
-        boolean isPassengerAlreadyBooked = isAlreadyBooked(passengerId,flightId);
-        boolean is_flight_available = isFlightAvaiable(flightId);
-        if(is_flight_available && !isPassengerAlreadyBooked)
+//        boolean isPassengerAlreadyBooked = isAlreadyBooked(passengerId,flightId);
+//        boolean is_flight_available = isFlightAvaiable(flightId);
+//        if(is_flight_available && !isPassengerAlreadyBooked)
+//        {
+//            airportRepository.addFlightPassengerDetails(flightId,passengerId);
+//            return "SUCCESS";
+//        }
+//        return "FAILURE";
+
+
+        Optional<Flight> flightOpt = airportRepository.getAirportNameFromFlightId(flightId);
+        if(flightOpt.isEmpty())
+            return "FAILURE";
+        List<Integer> passengers = airportRepository.getPassengerForFlight(flightId);
+        if(passengers.size() >= flightOpt.get().getMaxCapacity())
         {
-            airportRepository.addFlightPassengerDetails(flightId,passengerId);
-            return "SUCCESS";
+            return "FAILURE";
         }
-        return "FAILURE";
+        if(passengers.contains(passengerId))
+            return "FAILURE";
+        Optional<Passenger> passengerOpt = airportRepository.getPassengerById(passengerId);
+        if(passengerOpt.isEmpty())
+            return "FAILURE";
+        airportRepository.bookFlight(flightId,passengerId);
+
+        return "SUCCESS";
     }
 
     private boolean isFlightAvaiable(Integer flightId) {
@@ -93,9 +124,23 @@ public class AirportService {
     }
 
     public String cancelATicket(Integer flightId, Integer passengerId) {
-        int status = airportRepository.cancelTicket(flightId,passengerId);
-        if(status == 0)return "FAILURE";
+//        int status = airportRepository.cancelTicket(flightId,passengerId);
+//        if(status == 0)return "FAILURE";
+//        return "SUCCESS";
+        Optional<Flight> flightOpt = airportRepository.getAirportNameFromFlightId(flightId);
+        if(flightOpt.isEmpty())
+            return "FAILURE";
+
+        List<Integer> passengers = airportRepository.getPassengerForFlight(flightId);
+        if(!passengers.contains(passengerId))
+            return "FAILURE";
+
+        Optional<Passenger> passengerOpt = airportRepository.getPassengerById(passengerId);
+        if(passengerOpt.isEmpty())
+            return "FAILURE";
+        airportRepository.cancelFlight(flightId,passengerId);
         return "SUCCESS";
+
 
     }
 
@@ -145,7 +190,22 @@ public class AirportService {
     }
 
     public int countOfBookingsDoneByPassengerAllCombined(Integer passengerId) {
+//start from here
 
-        return airportRepository.countOfBookingsDoneByPassengerAllCombined(passengerId);
+        Map<Integer,List<Integer>> airportRepo = airportRepository.getAllFlightBooking();
+        int count=0;
+        for(Map.Entry<Integer,List<Integer>> map : airportRepo.entrySet())
+        {
+            if(map.getValue().contains(passengerId))
+                count++;
+        }
+
+        return count;
+//        return airportRepository.countOfBookingsDoneByPassengerAllCombined(passengerId);
+    }
+
+    public int getRevenueForFlight(Integer flightId) {
+        int n=airportRepository.getNumberOfPeopleOn(flightId);
+        return 3000*n + (50*n*(n-1))/2;
     }
 }

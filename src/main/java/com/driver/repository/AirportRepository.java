@@ -4,6 +4,7 @@ import com.driver.model.Airport;
 import com.driver.model.City;
 import com.driver.model.Flight;
 import com.driver.model.Passenger;
+import io.swagger.models.auth.In;
 import org.springframework.stereotype.Repository;
 
 import java.util.*;
@@ -31,16 +32,19 @@ public class AirportRepository {
         passengerMap.put(passenger.getPassengerId(),passenger);
     }
 
-    public String getAirportNameFromFlightId(Integer flightId) {
-        String airport_name = null;
-        for(Map.Entry<Integer,Flight> hm : flightMap.entrySet())
-        {
-            if(hm.getKey().equals(flightId)){
-                airport_name = hm.getValue().getFromCity().name();
-                break;
-            }
-        }
-        return airport_name;
+    public Optional<Flight> getAirportNameFromFlightId(Integer flightId) {
+//        String airport_name = null;
+//        for(Map.Entry<Integer,Flight> hm : flightMap.entrySet())
+//        {
+//            if(hm.getKey().equals(flightId)){
+//                airport_name = hm.getValue().getFromCity().name();
+//                break;
+//            }
+//        }
+//        return airport_name;
+        if(flightMap.containsKey(flightId))
+            return Optional.of(flightMap.get(flightId));
+        return Optional.empty();
 
     }
 
@@ -85,23 +89,23 @@ public class AirportRepository {
 
     }
 
-    public int cancelTicket(Integer flightId, Integer passengerId) {
-       // boolean status=false;
-        if(!flightMap.containsKey(flightId))
-        {
-           return 0;
-        }
-        if(!passengerMap.containsKey(passengerId))
-            return 0;
-        passengerMap.remove(passengerId);
-        List<Integer> list = flightPassengerDetails.get(flightId);
-        for(Integer it : list)
-        {
-            if(it==passengerId)
-                list.remove(it);
-        }
-        return 1;
-    }
+//    public int cancelTicket(Integer flightId, Integer passengerId) {
+//       // boolean status=false;
+//        if(!flightMap.containsKey(flightId))
+//        {
+//           return 0;
+//        }
+//        if(!passengerMap.containsKey(passengerId))
+//            return 0;
+//        passengerMap.remove(passengerId);
+//        List<Integer> list = flightPassengerDetails.get(flightId);
+//        for(Integer it : list)
+//        {
+//            if(it==passengerId)
+//                list.remove(it);
+//        }
+//        return 1;
+//    }
     public List<Flight> getFlightOnDate(Date date) {
         List<Flight> flight = new ArrayList<>();
         for(Map.Entry<Integer,Flight> hm : flightMap.entrySet())
@@ -129,5 +133,34 @@ public class AirportRepository {
             return Optional.of(airportData.get(airportName));
         }
         return Optional.empty();
+    }
+
+    public List<Integer> getPassengerForFlight(Integer flightId) {
+        if(flightPassengerDetails.containsKey(flightId))
+            return flightPassengerDetails.get(flightId);
+        return Collections.singletonList(0);
+    }
+
+    public Optional<Passenger> getPassengerById(Integer passengerId) {
+        if(passengerMap.containsKey(passengerId))
+            return Optional.of(passengerMap.get(passengerId));
+        return Optional.empty();
+    }
+
+    public void bookFlight(Integer flightId, Integer passengerId) {
+        List<Integer> psg = flightPassengerDetails.getOrDefault(flightId,new ArrayList<>());
+        psg.add(passengerId);
+        flightPassengerDetails.put(flightId,psg);
+
+    }
+
+    public void cancelFlight(Integer flightId, Integer passengerId) {
+        List<Integer> pss = flightPassengerDetails.getOrDefault(flightId,new ArrayList<>());
+        pss.remove(passengerId);
+        flightPassengerDetails.put(flightId,pss);
+    }
+
+    public Map<Integer, List<Integer>> getAllFlightBooking() {
+        return flightPassengerDetails;
     }
 }
